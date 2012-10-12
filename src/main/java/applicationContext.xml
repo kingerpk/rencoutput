@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="
+			http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+			http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd
+			http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd">
+	<aop:aspectj-autoproxy proxy-target-class="true"></aop:aspectj-autoproxy>
+	<bean id="log" class="com.everlightsz.ncoutput.aspect.Log"/>
+	<bean id="CombiteNcProcess" class="com.everlightsz.datahub.imple.CombiteNcProcess"/>
+	<bean id="CreateImgProcess" class="com.everlightsz.datahub.imple.CreateImgProcess">
+		<property name="simpleProcess" ref="SimgleImgProcess"/>
+	</bean>
+	<bean id="FtpDataGetter" class="com.everlightsz.datahub.imple.FtpDataGetter">
+		<property name="singleGetter" ref="singleFtpGetter"/>
+	</bean>
+	<bean id="SimgleImgProcess" class="com.everlightsz.datahub.imple.SingleImgProcess"/>
+	<bean id="singleFtpGetter" class="com.everlightsz.datahub.imple.SingleFtpGetter"/>
+	<bean id="HttpSender" class="com.everlightsz.datahub.imple.HttpSender"/>
+	<bean id="DataHub" class="com.everlightsz.datahub.imple.DataHub">
+		<property name="geter" ref="FtpDataGetter"/>
+		<property name="getProcesser" ref="CombiteNcProcess"/>
+		<property name="sendProcesser" ref="CreateImgProcess"/>
+		<property name="sender" ref="HttpSender"/>
+	</bean>
+	
+	<bean id="LeidaDetail"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject" ref="DataHub" />
+		<property name="targetMethod" value="hub" />
+	</bean>
+
+	<!--trigger -->
+	<bean id="LeiDaTrigger"
+		class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail" ref="LeidaDetail" />
+		<property name="cronExpression"  value="0 0/3 * * * ?"></property>
+	</bean>
+	
+	<bean id="tt" class="com.everlightsz.ncoutput.TT"/>
+	
+	<bean id="A"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject" ref="tt" />
+		<property name="targetMethod" value="t" />
+	</bean>
+	
+	<!--trigger -->
+	<bean id="TTTrigger"
+		class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail" ref="A" />
+		<property name="cronExpression"  value="0/5 * * * * ?"></property>
+	</bean> 
+
+	<!-- 关联 -->
+	<bean id="schedulerTrigger"
+		class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<property name="triggers">
+			<list>				
+				<!-- <ref bean="LeiDaTrigger" /> -->
+			</list>
+		</property>
+	</bean>
+</beans>
